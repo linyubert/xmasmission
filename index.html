@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔法聖誕樹 | 永順國小 2025 完美沈浸版</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Great+Vibes&family=Noto+Serif+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --gold: #FFD700;
+            --gold-grad: linear-gradient(135deg, #FFF5C3 0%, #FFD700 50%, #B8860B 100%);
+            --day-bg-grad: radial-gradient(circle at center, #F0F4F8 0%, #D9E2EC 100%);
+        }
+
+        body {
+            margin: 0; overflow: hidden;
+            background: var(--day-bg-grad);
+            font-family: 'Noto Serif TC', serif;
+            user-select: none;
+            transition: background 1.5s ease;
+        }
+
+        body.night-mode { background: #020205; }
+
+        /* --- UI 載入層 --- */
+        #loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease-in-out;
+        }
+        .loader-icon { font-size: 80px; animation: float 2s infinite ease-in-out; filter: drop-shadow(0 0 10px rgba(0,0,0,0.1)); }
+        .loader-text { 
+            margin-top: 20px; color: #b8860b; 
+            font-family: 'Cinzel', serif; letter-spacing: 4px; font-weight: bold;
+            animation: pulse 2s infinite; 
+        }
+
+        /* --- UI 交互層 --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header-panel {
+            margin-top: 30px; text-align: center;
+            transition: all 1s ease; z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif; font-size: clamp(36px, 5vw, 56px); margin: 0;
+            background: var(--gold-grad);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); 
+            letter-spacing: 3px;
+        }
+
+        .instruction-box {
+            margin-top: 20px; padding: 20px 50px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transform: translateY(0); transition: all 0.5s;
+        }
+        body.night-mode .instruction-box {
+            background: rgba(10, 10, 20, 0.7);
+            border-color: rgba(255, 215, 0, 0.5);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+        }
+
+        .step-title { font-size: 28px; color: #5D4037; font-weight: 900; margin-bottom: 8px; }
+        body.night-mode .step-title { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); } 
+        .step-desc { font-size: 18px; color: #333; font-weight: 600; }
+        body.night-mode .step-desc { color: #eee; }
+
+        .progress-container {
+            width: 300px; height: 8px; background: rgba(0,0,0,0.1); 
+            margin: 15px auto 0; border-radius: 4px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #2E7D32, #66bb6a); 
+            transition: width 0.2s;
+        }
+        body.night-mode .progress-bar-fill { background: linear-gradient(90deg, #FFD700, #FFF59D); box-shadow: 0 0 15px #FFD700; }
+
+        .cam-wrapper {
+            position: absolute; bottom: 30px; right: 30px;
+            width: 280px; height: 210px;
+            border-radius: 20px; overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 20; pointer-events: auto;
+            transition: opacity 1.5s ease; /* 增加淡出動畫 */
+        }
+        body.night-mode .cam-wrapper { border-color: rgba(255, 215, 0, 0.8); box-shadow: 0 0 30px rgba(255, 215, 0, 0.5); }
+        #webcam, #skeleton-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+
+        .controls { position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); pointer-events: auto; z-index: 20; }
+        .btn-next {
+            background: rgba(255,255,255,0.95); color: #8B4513; padding: 15px 50px;
+            border: 1px solid #8B4513; border-radius: 50px; font-family: 'Cinzel'; font-weight: 900;
+            font-size: 18px; cursor: pointer; opacity: 0; transform: translateY(20px);
+            transition: all 0.5s; box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        body.night-mode .btn-next {
+            background: #FFD700; color: #000; border: none; box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+        }
+        .btn-next.show { opacity: 1; transform: translateY(0); }
+        .btn-next:hover { transform: translateY(-3px) scale(1.05); }
+
+        /* --- 最終設計感文字特效 --- */
+        #final-message {
+            position: absolute; 
+            top: 12%; left: 50%; transform: translateX(-50%);
+            text-align: center; opacity: 0; pointer-events: none;
+            transition: opacity 1.5s ease; z-index: 50; width: 100%;
+        }
+        #final-message.show { opacity: 1; }
+
+        .school-name {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(2.5rem, 4vw, 3.5rem); 
+            font-weight: 700;
+            margin-bottom: 5px;
+            background: linear-gradient(45deg, #FFD700 0%, #FFFFFF 50%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+            letter-spacing: 0.15em;
+            animation: slideDown 1.2s ease-out forwards; 
+        }
+
+        .merry-xmas {
+            font-family: 'Great Vibes', cursive;
+            font-size: clamp(5rem, 10vw, 8rem); 
+            color: #fff;
+            margin-top: -10px;
+            line-height: 1.1;
+            text-shadow: 0 0 15px #fff, 0 0 30px #FFD700, 0 0 50px #FF8C00;
+            animation: pulseGlow 2s infinite alternate, slideDown 1.2s 0.2s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        @keyframes pulseGlow { 
+            from { text-shadow: 0 0 15px #fff, 0 0 30px #FFD700; transform: scale(1); } 
+            to { text-shadow: 0 0 25px #fff, 0 0 50px #FFD700, 0 0 70px #FF4500; transform: scale(1.02); } 
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-40px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+                "@mediapipe/tasks-vision": "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/+esm"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <div id="loader">
+        <div class="loader-icon">🎄</div>
+        <div class="loader-text">永順國小魔法教室準備中...</div>
+    </div>
+
+    <div id="ui-layer">
+        <div class="header-panel" id="header-panel">
+            <h1>聖誕魔法教室</h1>
+            <div class="instruction-box">
+                <div class="step-title" id="step-title"></div>
+                <div class="step-desc" id="step-desc"></div>
+                <div class="progress-container"><div class="progress-bar-fill" id="progress-fill"></div></div>
+            </div>
+        </div>
+
+        <div id="final-message">
+            <div class="school-name">永順國小 2025</div>
+            <div class="merry-xmas">Merry Xmas</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-next" id="btn-next" onclick="app.nextStep()">下一步 ➜</button>
+        </div>
+
+        <div class="cam-wrapper" id="cam-wrapper">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="skeleton-canvas"></canvas>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+
+        const CONFIG = {
+            colors: { 
+                trunk: 0x8D6E63, 
+                leaf: 0x2E7D32, 
+                gold: 0xFFD700, 
+                goldLight: 0xFFD700,
+                red: 0xD32F2F,
+                dayBg: 0xF0F4F8,
+                nightBg: 0x020205 
+            },
+            counts: { trunk: 500, leaves: 5000, deco: 600, lights: 2500 },
+            growthSpeed: 0.04 
+        };
+
+        const STEPS = [
+            { title: "步驟一：召喚樹幹", desc: "請將雙手【舉高】，看著神木拔地而起！" },
+            { title: "步驟二：生長枝葉", desc: "請將雙手【左右分開】，讓樹葉與燈泡長出來！" },
+            { title: "步驟三：點亮儀式", desc: "天黑了！請【用力張開五指】點亮整棵樹！" },
+            { title: "自由互動", desc: "盡情欣賞這棵魔法聖誕樹" }
+        ];
+
+        const CONNECTIONS = [[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[0,9],[9,10],[10,11],[11,12],[0,13],[13,14],[14,15],[15,16],[0,17],[17,18],[18,19],[19,20]];
+
+        class App {
+            constructor() {
+                this.step = 0;
+                this.progress = 0;
+                this.objects = { trunk: [], leaf: [], deco: [] };
+                this.targetRotation = { x: 0, y: 0 };
+                this.targetScale = 1;
+                this.targetCameraZ = 45;
+                this.cameraRadius = 85; 
+                this.isInteracting = false;
+                
+                this.currentBgColor = new THREE.Color(CONFIG.colors.dayBg);
+                this.fireworks = [];
+                this.stageLights = [];
+                this.clock = new THREE.Clock();
+
+                window.app = this;
+
+                this.initScene();
+                this.initParticles();
+                this.initGoldenLights();
+                this.initStageLights(); 
+                this.initPostProcess();
+                this.initVision(); 
+                this.updateUI();
+                this.animate();
+            }
+
+            initScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = this.currentBgColor;
+                this.scene.fog = new THREE.FogExp2(CONFIG.colors.dayBg, 0.008); 
+
+                this.camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 250);
+                this.camera.position.set(0, 6, this.targetCameraZ);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                this.renderer.toneMappingExposure = 1.0; 
+                document.body.appendChild(this.renderer.domElement);
+
+                this.ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+                this.scene.add(this.ambientLight);
+                
+                this.sunLight = new THREE.DirectionalLight(0xffffee, 1.8);
+                this.sunLight.position.set(20, 50, 30);
+                this.scene.add(this.sunLight);
+
+                const rimLight = new THREE.DirectionalLight(0x4455ff, 0.5);
+                rimLight.position.set(-10, 10, -20);
+                this.scene.add(rimLight);
+
+                this.spotLight = new THREE.SpotLight(CONFIG.colors.gold, 0); 
+                this.spotLight.position.set(0, 60, 40);
+                this.spotLight.angle = Math.PI / 3;
+                this.spotLight.penumbra = 0.3;
+                this.scene.add(this.spotLight);
+                
+                const grid = new THREE.GridHelper(100, 40, 0x888888, 0xcccccc);
+                grid.material.opacity = 0.2; grid.material.transparent = true;
+                grid.position.y = -15;
+                this.scene.add(grid);
+
+                this.treeGroup = new THREE.Group();
+                this.scene.add(this.treeGroup);
+            }
+
+            // --- 四方探照燈系統 ---
+            initStageLights() {
+                const positions = [
+                    [40, 0, 40], [-40, 0, 40], [-40, 0, -40], [40, 0, -40]
+                ];
+                positions.forEach(pos => {
+                    const light = new THREE.SpotLight(0xFFFFFF, 0); 
+                    light.position.set(...pos);
+                    light.angle = Math.PI / 6;
+                    light.penumbra = 0.4;
+                    light.distance = 200;
+                    light.decay = 1;
+                    light.target.position.set(0, 15, 0);
+                    this.scene.add(light);
+                    this.scene.add(light.target);
+                    this.stageLights.push(light);
+                });
+            }
+
+            initPostProcess() {
+                this.composer = new EffectComposer(this.renderer);
+                this.composer.addPass(new RenderPass(this.scene, this.camera));
+                this.bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+                this.bloomPass.strength = 0.0; 
+                this.bloomPass.radius = 0.0;
+                this.bloomPass.threshold = 1.0; 
+                this.composer.addPass(this.bloomPass);
+            }
+
+            createStarGeometry(outerRadius, innerRadius) {
+                const shape = new THREE.Shape();
+                const PI2 = Math.PI * 2;
+                for (let i = 0; i < 10; i++) {
+                    const r = (i % 2 === 0) ? outerRadius : innerRadius;
+                    const a = (i / 10) * PI2;
+                    const x = r * Math.sin(a);
+                    const y = r * Math.cos(a);
+                    if (i === 0) shape.moveTo(x, y); else shape.lineTo(x, y);
+                }
+                shape.closePath();
+                const extrudeSettings = { depth: 0.8, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.2, segments: 2 };
+                const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+                geo.rotateX(Math.PI / 2);
+                return geo;
+            }
+
+            initParticles() {
+                const geoBox = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const geoTetra = new THREE.TetrahedronGeometry(0.6); 
+                const geoSphere = new THREE.SphereGeometry(0.5, 16, 16);
+
+                const matTrunk = new THREE.MeshStandardMaterial({ color: CONFIG.colors.trunk, roughness: 0.9 });
+                const matLeaf = new THREE.MeshStandardMaterial({ color: CONFIG.colors.leaf, roughness: 0.6, metalness: 0.1 });
+                const matGold = new THREE.MeshPhysicalMaterial({ color: CONFIG.colors.gold, metalness: 0.8, roughness: 0.2, clearcoat: 1.0 });
+                const matRed = new THREE.MeshPhysicalMaterial({ color: CONFIG.colors.red, metalness: 0.4, roughness: 0.3, clearcoat: 0.8 });
+
+                const create = (geo, mat, type, posFn, scaleFn, isStar=false) => {
+                    const mesh = new THREE.Mesh(geo, mat);
+                    const pos = posFn();
+                    mesh.position.copy(pos);
+                    mesh.scale.set(0,0,0);
+                    mesh.userData = { 
+                        type: type, targetScale: scaleFn(), currentScale: 0,
+                        angle: Math.atan2(pos.z, pos.x), isStar: isStar
+                    };
+                    mesh.rotation.set(Math.random()*Math.PI, Math.random()*Math.PI, Math.random()*Math.PI);
+                    this.treeGroup.add(mesh);
+                    this.objects[type].push(mesh);
+                };
+
+                for(let i=0; i<CONFIG.counts.trunk; i++) create(geoBox, matTrunk, 'trunk', () => {
+                    const h = Math.random()*12 - 15; const r = Math.random()*2.5; const th = Math.random()*Math.PI*2;
+                    return new THREE.Vector3(r*Math.cos(th), h, r*Math.sin(th));
+                }, () => 1.8 + Math.random());
+
+                for(let i=0; i<CONFIG.counts.leaves; i++) create(geoTetra, matLeaf, 'leaf', () => {
+                    const t = i/CONFIG.counts.leaves; const h = t*32 - 14; const r = (1-t)*15 + 1; const th = t*65 + Math.random();
+                    return new THREE.Vector3(r*Math.cos(th), h, r*Math.sin(th));
+                }, () => 1.2 + Math.random()*0.6);
+
+                for(let i=0; i<CONFIG.counts.deco; i++) create(geoSphere, Math.random()>0.5?matGold:matRed, 'deco', () => {
+                    const t = Math.random(); const h = t*30 - 13; const r = (1-t)*16; const th = Math.random()*Math.PI*20;
+                    return new THREE.Vector3(r*Math.cos(th), h, r*Math.sin(th));
+                }, () => 1.6);
+                
+                const starGeo = this.createStarGeometry(3.0, 1.4);
+                const starMat = new THREE.MeshStandardMaterial({
+                    color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.5, metalness: 1.0, roughness: 0.2
+                });
+                create(starGeo, starMat, 'deco', () => new THREE.Vector3(0,19,0), () => 1.2, true);
+            }
+
+            initGoldenLights() {
+                const geo = new THREE.SphereGeometry(0.35, 16, 16); 
+                const mat = new THREE.MeshPhysicalMaterial({
+                    color: CONFIG.colors.gold,
+                    metalness: 0.3, roughness: 0.1,
+                    emissive: 0xFF5500, emissiveIntensity: 0.0,
+                    reflectivity: 1.0, clearcoat: 1.0
+                });
+
+                this.lightsMesh = new THREE.InstancedMesh(geo, mat, CONFIG.counts.lights);
+                this.lightsMesh.userData.twinkles = [];
+
+                const dummy = new THREE.Object3D();
+
+                for(let i=0; i<CONFIG.counts.lights; i++) {
+                    const t = i / CONFIG.counts.lights;
+                    const h = t * 32 - 14; 
+                    const r = (1 - t) * 17.5 + 2.0; 
+                    const angle = t * Math.PI * 60 + Math.random();
+                    
+                    dummy.position.set(
+                        Math.cos(angle) * r, h + (Math.random()-0.5), Math.sin(angle) * r
+                    );
+                    dummy.scale.setScalar(0);
+                    dummy.updateMatrix();
+                    this.lightsMesh.setMatrixAt(i, dummy.matrix);
+
+                    this.lightsMesh.userData.twinkles.push({
+                        speed: 3 + Math.random() * 5,
+                        phase: Math.random() * Math.PI * 2,
+                        baseScale: 0.8 + Math.random() * 0.4
+                    });
+                }
+                this.treeGroup.add(this.lightsMesh);
+            }
+
+            updateGoldenLights(time) {
+                if (this.step < 1) return; 
+
+                const dummy = new THREE.Object3D();
+                const matrix = new THREE.Matrix4();
+                
+                let visibilityProgress = 0;
+                if (this.step === 1) visibilityProgress = this.progress; 
+                else if (this.step >= 2) visibilityProgress = 1;
+
+                const isNight = (this.step >= 2 && this.targetBgColor && this.targetBgColor.getHex() === CONFIG.colors.nightBg);
+                const targetEmissive = isNight ? 10.0 : 0.0;
+                this.lightsMesh.material.emissiveIntensity += (targetEmissive - this.lightsMesh.material.emissiveIntensity) * 0.1;
+
+                for (let i = 0; i < CONFIG.counts.lights; i++) {
+                    this.lightsMesh.getMatrixAt(i, matrix);
+                    matrix.decompose(dummy.position, dummy.quaternion, dummy.scale);
+                    
+                    const data = this.lightsMesh.userData.twinkles[i];
+                    const threshold = (Math.sin(i * 0.8) + 1) / 2;
+                    let targetScale = 0;
+                    
+                    if (visibilityProgress > threshold * 0.5) {
+                        let scaleMod = 1.0;
+                        if (isNight) {
+                            const twinkle = Math.sin(time * data.speed + data.phase);
+                            scaleMod = 1 + twinkle * 0.4; 
+                        }
+                        targetScale = data.baseScale * scaleMod;
+                    }
+                    dummy.scale.setScalar(THREE.MathUtils.lerp(dummy.scale.x, targetScale, 0.15));
+                    dummy.updateMatrix();
+                    this.lightsMesh.setMatrixAt(i, dummy.matrix);
+                }
+                this.lightsMesh.instanceMatrix.needsUpdate = true;
+            }
+
+            async initVision() {
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+                this.landmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+                        delegate: "GPU"
+                    },
+                    runningMode: "VIDEO",
+                    numHands: 2
+                });
+                const video = document.getElementById('webcam');
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                
+                video.addEventListener('loadeddata', () => {
+                    document.getElementById('loader').style.opacity = 0;
+                    setTimeout(() => document.getElementById('loader').remove(), 1000);
+                    this.skCanvas = document.getElementById('skeleton-canvas');
+                    this.skCtx = this.skCanvas.getContext('2d');
+                    this.skCanvas.width = video.videoWidth;
+                    this.skCanvas.height = video.videoHeight;
+                });
+            }
+
+            drawSkeleton(landmarksArray) {
+                this.skCtx.clearRect(0, 0, this.skCanvas.width, this.skCanvas.height);
+                const w = this.skCanvas.width; const h = this.skCanvas.height; this.skCtx.lineWidth = 4;
+                landmarksArray.forEach(landmarks => {
+                    this.skCtx.strokeStyle = this.step < 2 ? '#2E7D32' : '#FFD700'; 
+                    for (const [s, e] of CONNECTIONS) {
+                        this.skCtx.beginPath(); this.skCtx.moveTo(landmarks[s].x * w, landmarks[s].y * h); this.skCtx.lineTo(landmarks[e].x * w, landmarks[e].y * h); this.skCtx.stroke();
+                    }
+                    this.skCtx.fillStyle = '#fff';
+                    landmarks.forEach(lm => { this.skCtx.beginPath(); this.skCtx.arc(lm.x * w, lm.y * h, 5, 0, 2 * Math.PI); this.skCtx.fill(); });
+                });
+            }
+
+            analyzeGesture(results) {
+                this.isInteracting = false;
+                
+                if (this.step === 3) return 0;
+
+                if (!results.landmarks || results.landmarks.length === 0) return 0;
+                
+                const hands = results.landmarks;
+                const isTwoHands = hands.length === 2;
+                let growRate = 0;
+                const wrist1 = hands[0][0];
+                const wrist2 = isTwoHands ? hands[1][0] : null;
+
+                if (this.step === 0) {
+                    if (wrist1.y < 0.4 || (wrist2 && wrist2.y < 0.6)) growRate = CONFIG.growthSpeed;
+                }
+                else if (this.step === 1) {
+                    if (isTwoHands && Math.abs(wrist1.x - wrist2.x) > 0.4) growRate = CONFIG.growthSpeed;
+                    else if (!isTwoHands && (wrist1.x < 0.3 || wrist1.x > 0.7)) growRate = CONFIG.growthSpeed;
+                }
+                else if (this.step === 2) {
+                    let isOpen = false;
+                    hands.forEach(hand => {
+                        const wrist = hand[0];
+                        const palmSize = Math.hypot(hand[9].x - wrist.x, hand[9].y - wrist.y);
+                        const tips = [4, 8, 12, 16, 20];
+                        let totalTipDist = 0;
+                        tips.forEach(idx => { totalTipDist += Math.hypot(hand[idx].x - wrist.x, hand[idx].y - wrist.y); });
+                        const avgTipDist = totalTipDist / 5;
+                        if (avgTipDist / palmSize > 2.5) isOpen = true;
+                    });
+                    if (isOpen) growRate = CONFIG.growthSpeed * 0.8;
+                }
+                return growRate;
+            }
+
+            nextStep() {
+                if (this.step < 3) {
+                    this.step++;
+                    this.progress = 0;
+                    document.getElementById('btn-next').classList.remove('show');
+                    
+                    if (this.step === 2) {
+                        this.toggleNightMode(true);
+                        this.cameraRadius = 85; 
+                    }
+                    this.updateUI();
+                }
+            }
+
+            toggleNightMode(isNight) {
+                const targetHex = isNight ? CONFIG.colors.nightBg : CONFIG.colors.dayBg;
+                const targetColor = new THREE.Color(targetHex);
+                this.targetBgColor = targetColor;
+                
+                if (isNight) {
+                    document.body.classList.add('night-mode');
+                    this.bloomPass.strength = 3.0; 
+                    this.bloomPass.radius = 0.8;
+                    this.bloomPass.threshold = 0.1;
+                    
+                    this.spotLight.intensity = 300;
+                    this.ambientLight.intensity = 0.05;
+                    this.sunLight.intensity = 0.0; 
+                    
+                    this.stageLights.forEach(l => l.intensity = 150);
+                }
+            }
+
+            updateUI() {
+                const s = STEPS[this.step];
+                document.getElementById('step-title').innerText = s.title;
+                document.getElementById('step-desc').innerText = s.desc;
+                document.getElementById('progress-fill').style.width = '0%';
+                
+                if (this.step === 3) {
+                    document.getElementById('header-panel').style.opacity = 0;
+                    document.getElementById('header-panel').style.transform = 'translateY(-100%)';
+                    document.getElementById('btn-next').style.display = 'none';
+                    document.getElementById('final-message').classList.add('show');
+                    
+                    // 隱藏攝影機畫面
+                    document.getElementById('cam-wrapper').style.opacity = 0;
+                }
+            }
+
+            spawnFirework() {
+                const particleCount = 150;
+                const geo = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                const colors = new Float32Array(particleCount * 3);
+                const velocities = [];
+
+                const centerX = (Math.random() - 0.5) * 80;
+                const centerY = 30 + Math.random() * 30;
+                const centerZ = -20 - Math.random() * 40;
+                const color = new THREE.Color().setHSL(Math.random(), 1.0, 0.7);
+
+                for (let i = 0; i < particleCount; i++) {
+                    positions[i*3] = centerX; positions[i*3+1] = centerY; positions[i*3+2] = centerZ;
+                    colors[i*3] = color.r; colors[i*3+1] = color.g; colors[i*3+2] = color.b;
+                    
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.random() * Math.PI;
+                    const speed = 0.8 + Math.random() * 3.0; 
+                    velocities.push(new THREE.Vector3(
+                        speed * Math.sin(phi) * Math.cos(theta),
+                        speed * Math.sin(phi) * Math.sin(theta),
+                        speed * Math.cos(phi)
+                    ));
+                }
+                geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                const mat = new THREE.PointsMaterial({ size: 0.8, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, opacity: 1, depthWrite: false });
+                const particles = new THREE.Points(geo, mat);
+                this.scene.add(particles);
+                this.fireworks.push({ mesh: particles, velocities: velocities, life: 1.0 });
+            }
+
+            updateFireworks() {
+                if (Math.random() < 0.08) this.spawnFirework(); 
+                for (let i = this.fireworks.length - 1; i >= 0; i--) {
+                    const fw = this.fireworks[i];
+                    const positions = fw.mesh.geometry.attributes.position.array;
+                    fw.life -= 0.015; 
+                    if (fw.life <= 0) {
+                        this.scene.remove(fw.mesh); fw.mesh.geometry.dispose(); fw.mesh.material.dispose();
+                        this.fireworks.splice(i, 1); continue;
+                    }
+                    fw.mesh.material.opacity = fw.life;
+                    for (let v = 0; v < fw.velocities.length; v++) {
+                        fw.velocities[v].y -= 0.03; fw.velocities[v].x *= 0.98; fw.velocities[v].z *= 0.98;
+                        positions[v*3] += fw.velocities[v].x; positions[v*3+1] += fw.velocities[v].y; positions[v*3+2] += fw.velocities[v].z;
+                    }
+                    fw.mesh.geometry.attributes.position.needsUpdate = true;
+                }
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                const time = this.clock.getElapsedTime();
+                
+                if (this.targetBgColor) {
+                    this.scene.background.lerp(this.targetBgColor, 0.05);
+                    this.scene.fog.color.lerp(this.targetBgColor, 0.05);
+                }
+                
+                // 動態運鏡：最後階段自動漸近 (Slow Dolly-in)
+                if (this.step === 3) {
+                     // 1. 相機半徑逐漸縮小
+                     if (this.cameraRadius > 35) {
+                         this.cameraRadius -= 0.015; 
+                     }
+                     
+                     // 2. 旋轉運鏡
+                     const speed = 0.2;
+                     this.camera.position.x = Math.sin(time * speed) * this.cameraRadius;
+                     this.camera.position.z = Math.cos(time * speed) * this.cameraRadius;
+                     this.camera.position.y = 15 + Math.sin(time * 0.1) * 3; 
+                     
+                     // 3. 視角微調：往樹梢看 (y=16)
+                     this.camera.lookAt(0, 16, 0); 
+                } else {
+                     this.camera.position.z += (this.targetCameraZ - this.camera.position.z) * 0.05;
+                     if (this.step < 3) this.camera.lookAt(0, 10, 0);
+                }
+
+                if (this.landmarker) {
+                    const video = document.getElementById('webcam');
+                    if (video.currentTime > 0) {
+                        const results = this.landmarker.detectForVideo(video, Date.now());
+                        if (results.landmarks && results.landmarks.length > 0) {
+                            this.drawSkeleton(results.landmarks);
+                            const growth = this.analyzeGesture(results);
+                            if (this.step < 3 && growth > 0) {
+                                this.progress += growth;
+                                if (this.progress > 1) this.progress = 1;
+                                document.getElementById('progress-fill').style.width = (this.progress * 100) + '%';
+                            }
+                        } else {
+                            this.skCtx.clearRect(0, 0, this.skCanvas.width, this.skCanvas.height);
+                        }
+                    }
+                }
+
+                if (this.progress >= 0.99 && this.step < 3) {
+                    const btn = document.getElementById('btn-next');
+                    if (!btn.classList.contains('show')) btn.classList.add('show');
+                }
+
+                ['trunk', 'leaf', 'deco'].forEach((type, typeIdx) => {
+                    const objs = this.objects[type];
+                    objs.forEach(mesh => {
+                        const u = mesh.userData;
+                        let targetS = 0;
+                        if (typeIdx < this.step) targetS = u.targetScale;
+                        else if (typeIdx === this.step) {
+                            const threshold = (u.angle + Math.PI) / (2 * Math.PI); 
+                            if (this.progress > threshold * 0.7) targetS = u.targetScale;
+                        }
+                        u.currentScale += (targetS - u.currentScale) * 0.15;
+                        if (u.currentScale < 0.01) mesh.visible = false;
+                        else {
+                            mesh.visible = true;
+                            mesh.scale.setScalar(u.currentScale);
+                        }
+                        if (type === 'leaf') mesh.rotation.y += 0.005;
+                        if (u.isStar) {
+                            mesh.rotation.y -= 0.02;
+                            mesh.scale.setScalar(u.currentScale * (1 + Math.sin(time * 3) * 0.15));
+                        }
+                    });
+                });
+
+                this.updateGoldenLights(time);
+
+                if (this.step === 3) {
+                     this.treeGroup.rotation.y += 0.003; 
+                } else {
+                     this.treeGroup.rotation.y += 0.002;
+                }
+                
+                this.treeGroup.rotation.x *= 0.9;
+                this.treeGroup.scale.set(1, 1, 1);
+
+                if (this.step === 3) this.updateFireworks();
+                
+                this.composer.render();
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => { new App(); });
+    </script>
+</body>
+</html>
